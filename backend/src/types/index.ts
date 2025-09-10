@@ -87,6 +87,35 @@ export interface CreateTaskRequest {
   priority?: number;
 }
 
+export interface UpdateTaskRequest {
+  name?: string;
+  description?: string;
+  dueDate?: string;
+  status?: TaskStatus;
+  category?: string;
+  priority?: number;
+  orderIndex?: number;
+}
+
+export interface ReorderTasksRequest {
+  taskIds: string[];
+}
+
+export interface BulkTaskOperation {
+  taskIds: string[];
+  operation: 'complete' | 'cancel' | 'delete';
+}
+
+export interface TaskTemplate {
+  id: string;
+  name: string;
+  description: string;
+  category: string;
+  priority: number;
+  orderIndex: number;
+  isDefault: boolean;
+}
+
 // Item types
 export interface Item {
   id: string;

@@ -61,6 +61,69 @@ export interface CreateMoveRequest {
   inventorySizeEstimate?: string;
 }
 
+// Task types
+export interface Task {
+  id: string;
+  moveId: string;
+  name: string;
+  description?: string;
+  dueDate?: string;
+  status: TaskStatus;
+  category: string;
+  priority: number;
+  orderIndex: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type TaskStatus = 'pending' | 'in_progress' | 'completed' | 'cancelled';
+
+export interface CreateTaskRequest {
+  name: string;
+  description?: string;
+  dueDate?: string;
+  category: string;
+  priority?: number;
+}
+
+export interface UpdateTaskRequest {
+  name?: string;
+  description?: string;
+  dueDate?: string;
+  status?: TaskStatus;
+  category?: string;
+  priority?: number;
+  orderIndex?: number;
+}
+
+export interface ReorderTasksRequest {
+  taskIds: string[];
+}
+
+export interface BulkTaskOperation {
+  taskIds: string[];
+  operation: 'complete' | 'cancel' | 'delete';
+}
+
+export interface TaskTemplate {
+  id: string;
+  name: string;
+  description: string;
+  category: string;
+  priority: number;
+  orderIndex: number;
+  isDefault: boolean;
+}
+
+export interface TaskStats {
+  total: number;
+  completed: number;
+  pending: number;
+  inProgress: number;
+  cancelled: number;
+  completionRate: number;
+}
+
 // API Response types
 export interface ApiResponse<T = any> {
   success: boolean;

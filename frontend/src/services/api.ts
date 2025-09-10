@@ -1,5 +1,5 @@
 import axios, { AxiosInstance, AxiosResponse } from 'axios';
-import { ApiResponse, AuthResponse, User, Move, CreateUserRequest, LoginRequest, CreateMoveRequest } from '../types';
+import { ApiResponse, AuthResponse, User, Move, CreateUserRequest, LoginRequest, CreateMoveRequest, Task, CreateTaskRequest, UpdateTaskRequest, ReorderTasksRequest, BulkTaskOperation, TaskTemplate, TaskStats } from '../types';
 
 class ApiService {
   private api: AxiosInstance;
@@ -90,6 +90,64 @@ class ApiService {
 
   async updateMoveStatus(id: string, status: string): Promise<ApiResponse<Move>> {
     const response: AxiosResponse<ApiResponse<Move>> = await this.api.patch(`/moves/${id}/status`, { status });
+    return response.data;
+  }
+
+  // Task endpoints
+  async getTasks(moveId: string, filters?: { status?: string; category?: string; priority?: number }): Promise<ApiResponse<Task[]>> {
+    const params = new URLSearchParams();
+    if (filters?.status) params.append('status', filters.status);
+    if (filters?.category) params.append('category', filters.category);
+    if (filters?.priority !== undefined) params.append('priority', filters.priority.toString());
+    
+    const queryString = params.toString();
+    const url = `/moves/${moveId}/tasks${queryString ? `?${queryString}` : ''}`;
+    const response: AxiosResponse<ApiResponse<Task[]>> = await this.api.get(url);
+    return response.data;
+  }
+
+  async getTask(moveId: string, taskId: string): Promise<ApiResponse<Task>> {
+    const response: AxiosResponse<ApiResponse<Task>> = await this.api.get(`/moves/${moveId}/tasks/${taskId}`);
+    return response.data;
+  }
+
+  async createTask(moveId: string, taskData: CreateTaskRequest): Promise<ApiResponse<Task>> {
+    const response: AxiosResponse<ApiResponse<Task>> = await this.api.post(`/moves/${moveId}/tasks`, taskData);
+    return response.data;
+  }
+
+  async updateTask(moveId: string, taskId: string, taskData: UpdateTaskRequest): Promise<ApiResponse<Task>> {
+    const response: AxiosResponse<ApiResponse<Task>> = await this.api.put(`/moves/${moveId}/tasks/${taskId}`, taskData);
+    return response.data;
+  }
+
+  async deleteTask(moveId: string, taskId: string): Promise<ApiResponse<void>> {
+    const response: AxiosResponse<ApiResponse<void>> = await this.api.delete(`/moves/${moveId}/tasks/${taskId}`);
+    return response.data;
+  }
+
+  async reorderTasks(moveId: string, reorderData: ReorderTasksRequest): Promise<ApiResponse<Task[]>> {
+    const response: AxiosResponse<ApiResponse<Task[]>> = await this.api.put(`/moves/${moveId}/tasks/reorder`, reorderData);
+    return response.data;
+  }
+
+  async bulkTaskOperation(moveId: string, operation: BulkTaskOperation): Promise<ApiResponse<void>> {
+    const response: AxiosResponse<ApiResponse<void>> = await this.api.post(`/moves/${moveId}/tasks/bulk`, operation);
+    return response.data;
+  }
+
+  async getTaskTemplates(): Promise<ApiResponse<TaskTemplate[]>> {
+    const response: AxiosResponse<ApiResponse<TaskTemplate[]>> = await this.api.get('/moves/templates');
+    return response.data;
+  }
+
+  async applyTaskTemplates(moveId: string, templateIds: string[]): Promise<ApiResponse<Task[]>> {
+    const response: AxiosResponse<ApiResponse<Task[]>> = await this.api.post(`/moves/${moveId}/tasks/apply-templates`, { templateIds });
+    return response.data;
+  }
+
+  async getTaskStats(moveId: string): Promise<ApiResponse<TaskStats>> {
+    const response: AxiosResponse<ApiResponse<TaskStats>> = await this.api.get(`/moves/${moveId}/tasks/stats`);
     return response.data;
   }
 }

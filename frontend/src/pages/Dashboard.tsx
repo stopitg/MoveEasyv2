@@ -140,7 +140,13 @@ const Dashboard: React.FC = () => {
                         )}
                       </div>
                       
-                      <div className="mt-4 flex justify-end">
+                      <div className="mt-4 flex justify-between">
+                        <Link
+                          to={`/moves/${move.id}/tasks`}
+                          className="text-green-600 hover:text-green-500 text-sm font-medium"
+                        >
+                          Manage Tasks
+                        </Link>
                         <Link
                           to={`/moves/${move.id}`}
                           className="text-blue-600 hover:text-blue-500 text-sm font-medium"

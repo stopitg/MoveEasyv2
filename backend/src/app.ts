@@ -37,6 +37,7 @@ app.get('/health', (req, res) => {
 // Import routes
 import authRoutes from './routes/auth';
 import moveRoutes from './routes/moves';
+import taskRoutes from './routes/tasks';
 
 // API routes
 app.get('/api', (req, res) => {
@@ -50,6 +51,7 @@ app.get('/api', (req, res) => {
 // Route handlers
 app.use('/api/auth', authRoutes);
 app.use('/api/moves', moveRoutes);
+app.use('/api/moves', taskRoutes);
 
 // Error handling middleware
 app.use((err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {
