@@ -9,6 +9,15 @@ dotenv.config();
 
 const app = express();
 
+// Environment validation
+const requiredEnvVars = ['JWT_SECRET'];
+const missingEnvVars = requiredEnvVars.filter(envVar => !process.env[envVar]);
+
+if (missingEnvVars.length > 0) {
+  console.error('❌ Missing required environment variables:', missingEnvVars);
+  process.exit(1);
+}
+
 // Security middleware
 app.use(helmet());
 
@@ -19,7 +28,7 @@ app.use(cors({
 }));
 
 // Logging middleware
-app.use(morgan('combined'));
+app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
 
 // Body parsing middleware
 app.use(express.json({ limit: '10mb' }));
@@ -30,7 +39,8 @@ app.get('/health', (req, res) => {
   res.status(200).json({
     status: 'OK',
     timestamp: new Date().toISOString(),
-    environment: process.env.NODE_ENV || 'development'
+    environment: process.env.NODE_ENV || 'development',
+    uptime: process.uptime()
   });
 });
 
@@ -47,7 +57,8 @@ app.get('/api', (req, res) => {
   res.json({
     message: 'MoveEasy API',
     version: '1.0.0',
-    status: 'running'
+    status: 'running',
+    environment: process.env.NODE_ENV || 'development'
   });
 });
 
@@ -61,16 +72,22 @@ app.use('/api', boxRoutes);
 
 // Error handling middleware
 app.use((err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {
-  console.error(err.stack);
+  console.error('Error:', err.stack);
+  
+  const isDevelopment = process.env.NODE_ENV === 'development';
+  
   res.status(500).json({
+    success: false,
     error: 'Something went wrong!',
-    message: process.env.NODE_ENV === 'development' ? err.message : 'Internal server error'
+    message: isDevelopment ? err.message : 'Internal server error',
+    ...(isDevelopment && { stack: err.stack })
   });
 });
 
 // 404 handler
 app.use((req, res) => {
   res.status(404).json({
+    success: false,
     error: 'Route not found',
     message: `Cannot ${req.method} ${req.originalUrl}`
   });
