@@ -141,12 +141,20 @@ const Dashboard: React.FC = () => {
                       </div>
                       
                       <div className="mt-4 flex justify-between">
-                        <Link
-                          to={`/moves/${move.id}/tasks`}
-                          className="text-green-600 hover:text-green-500 text-sm font-medium"
-                        >
-                          Manage Tasks
-                        </Link>
+                        <div className="flex space-x-4">
+                          <Link
+                            to={`/moves/${move.id}/tasks`}
+                            className="text-green-600 hover:text-green-500 text-sm font-medium"
+                          >
+                            Manage Tasks
+                          </Link>
+                          <Link
+                            to={`/moves/${move.id}/inventory`}
+                            className="text-purple-600 hover:text-purple-500 text-sm font-medium"
+                          >
+                            Manage Inventory
+                          </Link>
+                        </div>
                         <Link
                           to={`/moves/${move.id}`}
                           className="text-blue-600 hover:text-blue-500 text-sm font-medium"

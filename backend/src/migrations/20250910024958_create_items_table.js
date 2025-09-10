@@ -3,26 +3,30 @@
  * @returns { Promise<void> }
  */
 exports.up = function(knex) {
-  return knex.schema.createTable('tasks', function(table) {
+  return knex.schema.createTable('items', function(table) {
     table.string('id').primary().defaultTo(knex.raw("(lower(hex(randomblob(4))) || '-' || lower(hex(randomblob(2))) || '-4' || substr(lower(hex(randomblob(2))),2) || '-' || substr('89ab',abs(random()) % 4 + 1, 1) || substr(lower(hex(randomblob(2))),2) || '-' || lower(hex(randomblob(6))))"));
     table.string('move_id').notNullable().references('id').inTable('moves').onDelete('CASCADE');
+    table.string('room_id').references('id').inTable('rooms').onDelete('SET NULL');
+    table.string('box_id').references('id').inTable('boxes').onDelete('SET NULL');
     table.string('name', 255).notNullable();
     table.text('description');
-    table.date('due_date');
-    table.string('status', 20).notNullable().defaultTo('pending');
-    table.string('category', 50).notNullable();
-    table.integer('priority').defaultTo(0);
-    table.integer('order_index').defaultTo(0);
+    table.string('photo_url', 500);
+    table.decimal('estimated_value', 10, 2);
+    table.json('properties'); // For flexible item properties
+    table.string('condition', 50); // new, good, fair, poor
+    table.string('category', 100); // furniture, electronics, clothing, etc.
+    table.boolean('is_fragile').defaultTo(false);
+    table.boolean('requires_special_handling').defaultTo(false);
     table.timestamp('created_at').defaultTo(knex.fn.now());
     table.timestamp('updated_at').defaultTo(knex.fn.now());
     
     // Indexes for performance
     table.index('move_id');
-    table.index('status');
-    table.index('category');
-    table.index('due_date');
-    table.index(['move_id', 'status']);
+    table.index('room_id');
+    table.index('box_id');
+    table.index(['move_id', 'room_id']);
     table.index(['move_id', 'category']);
+    table.index('name');
   });
 };
 
@@ -31,5 +35,5 @@ exports.up = function(knex) {
  * @returns { Promise<void> }
  */
 exports.down = function(knex) {
-  return knex.schema.dropTable('tasks');
+  return knex.schema.dropTable('items');
 };

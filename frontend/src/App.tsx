@@ -5,6 +5,7 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
 import TaskManagement from './pages/TaskManagement';
+import InventoryManagement from './pages/InventoryManagement';
 
 function App() {
   return (
@@ -27,6 +28,14 @@ function App() {
               element={
                 <ProtectedRoute>
                   <TaskManagement />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/moves/:moveId/inventory"
+              element={
+                <ProtectedRoute>
+                  <InventoryManagement />
                 </ProtectedRoute>
               }
             />

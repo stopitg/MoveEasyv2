@@ -116,54 +116,132 @@ export interface TaskTemplate {
   isDefault: boolean;
 }
 
-// Item types
-export interface Item {
-  id: string;
-  moveId: string;
-  roomId?: string;
-  boxId?: string;
-  name: string;
-  description?: string;
-  photoUrl?: string;
-  estimatedValue?: number;
-  properties?: Record<string, any>;
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-export interface CreateItemRequest {
-  name: string;
-  description?: string;
-  roomId?: string;
-  estimatedValue?: number;
-  properties?: Record<string, any>;
-}
-
 // Room types
 export interface Room {
   id: string;
-  moveId: string;
+  move_id: string;
   name: string;
-  createdAt: Date;
+  description?: string;
+  created_at: Date;
+  updated_at: Date;
 }
 
-export interface CreateRoomRequest {
+export interface CreateRoomData {
   name: string;
+  description?: string;
+}
+
+export interface UpdateRoomData {
+  name?: string;
+  description?: string;
+}
+
+// Item types
+export interface Item {
+  id: string;
+  move_id: string;
+  room_id?: string;
+  box_id?: string;
+  name: string;
+  description?: string;
+  photo_url?: string;
+  estimated_value?: number;
+  properties?: Record<string, any>;
+  condition?: string;
+  category?: string;
+  is_fragile: boolean;
+  requires_special_handling: boolean;
+  created_at: Date;
+  updated_at: Date;
+  room_name?: string;
+  box_label?: string;
+}
+
+export interface CreateItemData {
+  name: string;
+  description?: string;
+  room_id?: string;
+  box_id?: string;
+  photo_url?: string;
+  estimated_value?: number;
+  properties?: Record<string, any>;
+  condition?: string;
+  category?: string;
+  is_fragile?: boolean;
+  requires_special_handling?: boolean;
+}
+
+export interface UpdateItemData {
+  name?: string;
+  description?: string;
+  room_id?: string;
+  box_id?: string;
+  photo_url?: string;
+  estimated_value?: number;
+  properties?: Record<string, any>;
+  condition?: string;
+  category?: string;
+  is_fragile?: boolean;
+  requires_special_handling?: boolean;
+}
+
+export interface ItemFilters {
+  room_id?: string;
+  box_id?: string;
+  category?: string;
+  condition?: string;
+  is_fragile?: boolean;
+  search?: string;
+  sort_by?: string;
+  sort_order?: 'asc' | 'desc';
 }
 
 // Box types
 export interface Box {
   id: string;
-  moveId: string;
+  move_id: string;
   label: string;
-  qrCode: string;
-  destinationRoomId?: string;
-  createdAt: Date;
+  qr_code: string;
+  destination_room_id?: string;
+  box_type: string;
+  notes?: string;
+  is_packed: boolean;
+  is_loaded: boolean;
+  is_delivered: boolean;
+  packed_at?: Date;
+  loaded_at?: Date;
+  delivered_at?: Date;
+  created_at: Date;
+  updated_at: Date;
+  destination_room_name?: string;
 }
 
-export interface CreateBoxRequest {
+export interface CreateBoxData {
   label: string;
-  destinationRoomId?: string;
+  destination_room_id?: string;
+  box_type?: string;
+  notes?: string;
+}
+
+export interface UpdateBoxData {
+  label?: string;
+  destination_room_id?: string;
+  box_type?: string;
+  notes?: string;
+  is_packed?: boolean;
+  is_loaded?: boolean;
+  is_delivered?: boolean;
+}
+
+export interface BoxFilters {
+  box_type?: string;
+  is_packed?: boolean;
+  is_loaded?: boolean;
+  is_delivered?: boolean;
+  destination_room_id?: string;
+  search?: string;
+  sort_by?: string;
+  sort_order?: 'asc' | 'desc';
 }
 
 // Expense types

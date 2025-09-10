@@ -38,6 +38,9 @@ app.get('/health', (req, res) => {
 import authRoutes from './routes/auth';
 import moveRoutes from './routes/moves';
 import taskRoutes from './routes/tasks';
+import roomRoutes from './routes/rooms';
+import itemRoutes from './routes/items';
+import boxRoutes from './routes/boxes';
 
 // API routes
 app.get('/api', (req, res) => {
@@ -52,6 +55,9 @@ app.get('/api', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/moves', moveRoutes);
 app.use('/api/moves', taskRoutes);
+app.use('/api', roomRoutes);
+app.use('/api', itemRoutes);
+app.use('/api', boxRoutes);
 
 // Error handling middleware
 app.use((err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {

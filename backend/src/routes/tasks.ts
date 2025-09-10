@@ -2,15 +2,16 @@ import { Router } from 'express';
 import { body, param, query } from 'express-validator';
 import { TaskController } from '../controllers/taskController';
 import { TaskService } from '../services/taskService';
-import { authMiddleware } from '../middleware/auth';
-import { validateRequest } from '../middleware/validation';
+import { authenticateToken } from '../middleware/auth';
+import { validate } from '../middleware/validation';
+import db from '../config/database';
 
 const router = Router();
-const taskService = new TaskService(require('../config/database').default);
+const taskService = new TaskService(db);
 const taskController = new TaskController(taskService);
 
 // Apply authentication middleware to all routes
-router.use(authMiddleware);
+router.use(authenticateToken);
 
 // Validation rules
 const createTaskValidation = [
@@ -135,7 +136,7 @@ router.post(
   '/:moveId/tasks',
   moveIdValidation,
   createTaskValidation,
-  validateRequest,
+  validate,
   taskController.createTask.bind(taskController)
 );
 
@@ -143,14 +144,14 @@ router.get(
   '/:moveId/tasks',
   moveIdValidation,
   queryValidation,
-  validateRequest,
+  validate,
   taskController.getTasks.bind(taskController)
 );
 
 router.get(
   '/tasks/:taskId',
   taskIdValidation,
-  validateRequest,
+  validate,
   taskController.getTask.bind(taskController)
 );
 
@@ -158,14 +159,14 @@ router.put(
   '/tasks/:taskId',
   taskIdValidation,
   updateTaskValidation,
-  validateRequest,
+  validate,
   taskController.updateTask.bind(taskController)
 );
 
 router.delete(
   '/tasks/:taskId',
   taskIdValidation,
-  validateRequest,
+  validate,
   taskController.deleteTask.bind(taskController)
 );
 
@@ -173,7 +174,7 @@ router.put(
   '/:moveId/tasks/reorder',
   moveIdValidation,
   reorderTasksValidation,
-  validateRequest,
+  validate,
   taskController.reorderTasks.bind(taskController)
 );
 
@@ -181,7 +182,7 @@ router.post(
   '/:moveId/tasks/bulk',
   moveIdValidation,
   bulkTaskOperationValidation,
-  validateRequest,
+  validate,
   taskController.bulkTaskOperation.bind(taskController)
 );
 
@@ -194,14 +195,14 @@ router.post(
   '/:moveId/tasks/templates',
   moveIdValidation,
   applyTemplatesValidation,
-  validateRequest,
+  validate,
   taskController.applyTaskTemplates.bind(taskController)
 );
 
 router.get(
   '/:moveId/tasks/stats',
   moveIdValidation,
-  validateRequest,
+  validate,
   taskController.getTaskStats.bind(taskController)
 );
 
