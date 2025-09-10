@@ -1,5 +1,5 @@
-import axios, { AxiosInstance, AxiosResponse } from 'axios';
-import { ApiResponse, AuthResponse, User, Move, CreateUserRequest, LoginRequest, CreateMoveRequest, Task, CreateTaskRequest, UpdateTaskRequest, ReorderTasksRequest, BulkTaskOperation, TaskTemplate, TaskStats } from '../types';
+import axios, { type AxiosInstance, type AxiosResponse } from 'axios';
+import type { ApiResponse, AuthResponse, User, Move, CreateUserRequest, LoginRequest, CreateMoveRequest, Task, CreateTaskRequest, UpdateTaskRequest, ReorderTasksRequest, BulkTaskOperation, TaskTemplate, TaskStats } from '../types';
 
 class ApiService {
   private api: AxiosInstance;
@@ -142,7 +142,7 @@ class ApiService {
   }
 
   async applyTaskTemplates(moveId: string, templateIds: string[]): Promise<ApiResponse<Task[]>> {
-    const response: AxiosResponse<ApiResponse<Task[]>> = await this.api.post(`/moves/${moveId}/tasks/apply-templates`, { templateIds });
+    const response: AxiosResponse<ApiResponse<Task[]>> = await this.api.post(`/moves/${moveId}/tasks/templates`, { templateIds });
     return response.data;
   }
 

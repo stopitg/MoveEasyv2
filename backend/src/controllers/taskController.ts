@@ -2,283 +2,369 @@ import { Request, Response } from 'express';
 import { TaskService } from '../services/taskService';
 import { CreateTaskRequest, UpdateTaskRequest, ReorderTasksRequest, BulkTaskOperation } from '../types';
 
-const taskService = new TaskService();
-
 export class TaskController {
-  // Get all tasks for a move
-  async getTasks(req: Request, res: Response): Promise<void> {
-    try {
-      const { moveId } = req.params;
-      const { status, category, priority } = req.query;
+  constructor(private taskService: TaskService) {}
 
-      let tasks = await taskService.getTasksByMoveId(moveId);
-
-      // Apply filters
-      if (status) {
-        tasks = tasks.filter(task => task.status === status);
-      }
-      if (category) {
-        tasks = tasks.filter(task => task.category === category);
-      }
-      if (priority) {
-        tasks = tasks.filter(task => task.priority === parseInt(priority as string));
-      }
-
-      res.json({
-        success: true,
-        data: tasks,
-        message: 'Tasks retrieved successfully',
-      });
-    } catch (error) {
-      res.status(500).json({
-        success: false,
-        error: error instanceof Error ? error.message : 'Failed to retrieve tasks',
-      });
-    }
-  }
-
-  // Get a specific task
-  async getTask(req: Request, res: Response): Promise<void> {
-    try {
-      const { moveId, taskId } = req.params;
-
-      const task = await taskService.getTaskById(taskId, moveId);
-
-      if (!task) {
-        res.status(404).json({
-          success: false,
-          error: 'Task not found',
-        });
-        return;
-      }
-
-      res.json({
-        success: true,
-        data: task,
-        message: 'Task retrieved successfully',
-      });
-    } catch (error) {
-      res.status(500).json({
-        success: false,
-        error: error instanceof Error ? error.message : 'Failed to retrieve task',
-      });
-    }
-  }
-
-  // Create a new task
   async createTask(req: Request, res: Response): Promise<void> {
     try {
       const { moveId } = req.params;
       const taskData: CreateTaskRequest = req.body;
 
-      // Validate required fields
-      if (!taskData.name || !taskData.category) {
-        res.status(400).json({
+      // Verify the move belongs to the authenticated user
+      const move = await req.db('moves')
+        .where('id', moveId)
+        .where('user_id', req.user!.userId)
+        .first();
+
+      if (!move) {
+        res.status(404).json({
           success: false,
-          error: 'Name and category are required',
+          error: 'Move not found'
         });
         return;
       }
 
-      const task = await taskService.createTask(moveId, taskData);
+      const task = await this.taskService.createTask(moveId, taskData);
 
       res.status(201).json({
         success: true,
         data: task,
-        message: 'Task created successfully',
+        message: 'Task created successfully'
       });
     } catch (error) {
+      console.error('Error creating task:', error);
       res.status(500).json({
         success: false,
-        error: error instanceof Error ? error.message : 'Failed to create task',
+        error: 'Failed to create task'
       });
     }
   }
 
-  // Update a task
-  async updateTask(req: Request, res: Response): Promise<void> {
+  async getTasks(req: Request, res: Response): Promise<void> {
     try {
-      const { moveId, taskId } = req.params;
-      const taskData: UpdateTaskRequest = req.body;
+      const { moveId } = req.params;
+      const { status, category, search } = req.query;
 
-      const task = await taskService.updateTask(taskId, moveId, taskData);
+      // Verify the move belongs to the authenticated user
+      const move = await req.db('moves')
+        .where('id', moveId)
+        .where('user_id', req.user!.userId)
+        .first();
+
+      if (!move) {
+        res.status(404).json({
+          success: false,
+          error: 'Move not found'
+        });
+        return;
+      }
+
+      const filters = {
+        status: status as string,
+        category: category as string,
+        search: search as string
+      };
+
+      const tasks = await this.taskService.getTasksByMoveId(moveId, filters);
+
+      res.json({
+        success: true,
+        data: tasks
+      });
+    } catch (error) {
+      console.error('Error fetching tasks:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to fetch tasks'
+      });
+    }
+  }
+
+  async getTask(req: Request, res: Response): Promise<void> {
+    try {
+      const { taskId } = req.params;
+
+      const task = await this.taskService.getTaskById(taskId);
 
       if (!task) {
         res.status(404).json({
           success: false,
-          error: 'Task not found',
+          error: 'Task not found'
         });
         return;
       }
 
-      res.json({
-        success: true,
-        data: task,
-        message: 'Task updated successfully',
-      });
-    } catch (error) {
-      res.status(500).json({
-        success: false,
-        error: error instanceof Error ? error.message : 'Failed to update task',
-      });
-    }
-  }
+      // Verify the task belongs to a move owned by the authenticated user
+      const move = await req.db('moves')
+        .where('id', task.moveId)
+        .where('user_id', req.user!.userId)
+        .first();
 
-  // Delete a task
-  async deleteTask(req: Request, res: Response): Promise<void> {
-    try {
-      const { moveId, taskId } = req.params;
-
-      const deleted = await taskService.deleteTask(taskId, moveId);
-
-      if (!deleted) {
+      if (!move) {
         res.status(404).json({
           success: false,
-          error: 'Task not found',
+          error: 'Task not found'
         });
         return;
       }
 
       res.json({
         success: true,
-        message: 'Task deleted successfully',
+        data: task
       });
     } catch (error) {
+      console.error('Error fetching task:', error);
       res.status(500).json({
         success: false,
-        error: error instanceof Error ? error.message : 'Failed to delete task',
+        error: 'Failed to fetch task'
       });
     }
   }
 
-  // Reorder tasks
+  async updateTask(req: Request, res: Response): Promise<void> {
+    try {
+      const { taskId } = req.params;
+      const updateData: UpdateTaskRequest = req.body;
+
+      // First verify the task exists and belongs to the user
+      const task = await this.taskService.getTaskById(taskId);
+      if (!task) {
+        res.status(404).json({
+          success: false,
+          error: 'Task not found'
+        });
+        return;
+      }
+
+      const move = await req.db('moves')
+        .where('id', task.moveId)
+        .where('user_id', req.user!.userId)
+        .first();
+
+      if (!move) {
+        res.status(404).json({
+          success: false,
+          error: 'Task not found'
+        });
+        return;
+      }
+
+      const updatedTask = await this.taskService.updateTask(taskId, updateData);
+
+      res.json({
+        success: true,
+        data: updatedTask,
+        message: 'Task updated successfully'
+      });
+    } catch (error) {
+      console.error('Error updating task:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to update task'
+      });
+    }
+  }
+
+  async deleteTask(req: Request, res: Response): Promise<void> {
+    try {
+      const { taskId } = req.params;
+
+      // First verify the task exists and belongs to the user
+      const task = await this.taskService.getTaskById(taskId);
+      if (!task) {
+        res.status(404).json({
+          success: false,
+          error: 'Task not found'
+        });
+        return;
+      }
+
+      const move = await req.db('moves')
+        .where('id', task.moveId)
+        .where('user_id', req.user!.userId)
+        .first();
+
+      if (!move) {
+        res.status(404).json({
+          success: false,
+          error: 'Task not found'
+        });
+        return;
+      }
+
+      const deleted = await this.taskService.deleteTask(taskId);
+
+      if (deleted) {
+        res.json({
+          success: true,
+          message: 'Task deleted successfully'
+        });
+      } else {
+        res.status(500).json({
+          success: false,
+          error: 'Failed to delete task'
+        });
+      }
+    } catch (error) {
+      console.error('Error deleting task:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to delete task'
+      });
+    }
+  }
+
   async reorderTasks(req: Request, res: Response): Promise<void> {
     try {
       const { moveId } = req.params;
       const reorderData: ReorderTasksRequest = req.body;
 
-      if (!reorderData.taskIds || !Array.isArray(reorderData.taskIds)) {
-        res.status(400).json({
+      // Verify the move belongs to the authenticated user
+      const move = await req.db('moves')
+        .where('id', moveId)
+        .where('user_id', req.user!.userId)
+        .first();
+
+      if (!move) {
+        res.status(404).json({
           success: false,
-          error: 'taskIds array is required',
+          error: 'Move not found'
         });
         return;
       }
 
-      const tasks = await taskService.reorderTasks(moveId, reorderData);
+      const tasks = await this.taskService.reorderTasks(moveId, reorderData);
 
       res.json({
         success: true,
         data: tasks,
-        message: 'Tasks reordered successfully',
+        message: 'Tasks reordered successfully'
       });
     } catch (error) {
+      console.error('Error reordering tasks:', error);
       res.status(500).json({
         success: false,
-        error: error instanceof Error ? error.message : 'Failed to reorder tasks',
+        error: 'Failed to reorder tasks'
       });
     }
   }
 
-  // Bulk task operations
   async bulkTaskOperation(req: Request, res: Response): Promise<void> {
     try {
       const { moveId } = req.params;
       const operation: BulkTaskOperation = req.body;
 
-      if (!operation.taskIds || !Array.isArray(operation.taskIds) || !operation.operation) {
-        res.status(400).json({
+      // Verify the move belongs to the authenticated user
+      const move = await req.db('moves')
+        .where('id', moveId)
+        .where('user_id', req.user!.userId)
+        .first();
+
+      if (!move) {
+        res.status(404).json({
           success: false,
-          error: 'taskIds array and operation are required',
+          error: 'Move not found'
         });
         return;
       }
 
-      const success = await taskService.bulkTaskOperation(moveId, operation);
-
-      if (!success) {
-        res.status(400).json({
-          success: false,
-          error: 'No tasks were affected by the operation',
-        });
-        return;
-      }
+      const result = await this.taskService.bulkTaskOperation(moveId, operation);
 
       res.json({
         success: true,
-        message: `Tasks ${operation.operation}d successfully`,
+        data: result,
+        message: `Bulk operation completed: ${result.success} successful, ${result.failed} failed`
       });
     } catch (error) {
+      console.error('Error performing bulk task operation:', error);
       res.status(500).json({
         success: false,
-        error: error instanceof Error ? error.message : 'Failed to perform bulk operation',
+        error: 'Failed to perform bulk task operation'
       });
     }
   }
 
-  // Get task templates
   async getTaskTemplates(req: Request, res: Response): Promise<void> {
     try {
-      const templates = await taskService.getTaskTemplates();
+      const templates = await this.taskService.getTaskTemplates();
 
       res.json({
         success: true,
-        data: templates,
-        message: 'Task templates retrieved successfully',
+        data: templates
       });
     } catch (error) {
+      console.error('Error fetching task templates:', error);
       res.status(500).json({
         success: false,
-        error: error instanceof Error ? error.message : 'Failed to retrieve task templates',
+        error: 'Failed to fetch task templates'
       });
     }
   }
 
-  // Apply task templates to a move
   async applyTaskTemplates(req: Request, res: Response): Promise<void> {
     try {
       const { moveId } = req.params;
       const { templateIds } = req.body;
 
-      if (!templateIds || !Array.isArray(templateIds)) {
-        res.status(400).json({
+      // Verify the move belongs to the authenticated user
+      const move = await req.db('moves')
+        .where('id', moveId)
+        .where('user_id', req.user!.userId)
+        .first();
+
+      if (!move) {
+        res.status(404).json({
           success: false,
-          error: 'templateIds array is required',
+          error: 'Move not found'
         });
         return;
       }
 
-      const tasks = await taskService.applyTaskTemplates(moveId, templateIds);
+      const tasks = await this.taskService.applyTaskTemplates(moveId, templateIds);
 
       res.status(201).json({
         success: true,
         data: tasks,
-        message: 'Task templates applied successfully',
+        message: 'Task templates applied successfully'
       });
     } catch (error) {
+      console.error('Error applying task templates:', error);
       res.status(500).json({
         success: false,
-        error: error instanceof Error ? error.message : 'Failed to apply task templates',
+        error: 'Failed to apply task templates'
       });
     }
   }
 
-  // Get task statistics
   async getTaskStats(req: Request, res: Response): Promise<void> {
     try {
       const { moveId } = req.params;
 
-      const stats = await taskService.getTaskStats(moveId);
+      // Verify the move belongs to the authenticated user
+      const move = await req.db('moves')
+        .where('id', moveId)
+        .where('user_id', req.user!.userId)
+        .first();
+
+      if (!move) {
+        res.status(404).json({
+          success: false,
+          error: 'Move not found'
+        });
+        return;
+      }
+
+      const stats = await this.taskService.getTaskStats(moveId);
 
       res.json({
         success: true,
-        data: stats,
-        message: 'Task statistics retrieved successfully',
+        data: stats
       });
     } catch (error) {
+      console.error('Error fetching task stats:', error);
       res.status(500).json({
         success: false,
-        error: error instanceof Error ? error.message : 'Failed to retrieve task statistics',
+        error: 'Failed to fetch task stats'
       });
     }
   }
