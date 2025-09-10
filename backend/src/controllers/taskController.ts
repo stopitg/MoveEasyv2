@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { TaskService } from '../services/taskService';
 import { CreateTaskRequest, UpdateTaskRequest, ReorderTasksRequest, BulkTaskOperation } from '../types';
+import db from '../config/database';
 
 export class TaskController {
   constructor(private taskService: TaskService) {}
@@ -11,7 +12,7 @@ export class TaskController {
       const taskData: CreateTaskRequest = req.body;
 
       // Verify the move belongs to the authenticated user
-      const move = await req.db('moves')
+      const move = await db('moves')
         .where('id', moveId)
         .where('user_id', req.user!.userId)
         .first();
@@ -46,7 +47,7 @@ export class TaskController {
       const { status, category, search } = req.query;
 
       // Verify the move belongs to the authenticated user
-      const move = await req.db('moves')
+      const move = await db('moves')
         .where('id', moveId)
         .where('user_id', req.user!.userId)
         .first();
@@ -95,7 +96,7 @@ export class TaskController {
       }
 
       // Verify the task belongs to a move owned by the authenticated user
-      const move = await req.db('moves')
+      const move = await db('moves')
         .where('id', task.moveId)
         .where('user_id', req.user!.userId)
         .first();
@@ -136,7 +137,7 @@ export class TaskController {
         return;
       }
 
-      const move = await req.db('moves')
+      const move = await db('moves')
         .where('id', task.moveId)
         .where('user_id', req.user!.userId)
         .first();
@@ -179,7 +180,7 @@ export class TaskController {
         return;
       }
 
-      const move = await req.db('moves')
+      const move = await db('moves')
         .where('id', task.moveId)
         .where('user_id', req.user!.userId)
         .first();
@@ -220,7 +221,7 @@ export class TaskController {
       const reorderData: ReorderTasksRequest = req.body;
 
       // Verify the move belongs to the authenticated user
-      const move = await req.db('moves')
+      const move = await db('moves')
         .where('id', moveId)
         .where('user_id', req.user!.userId)
         .first();
@@ -255,7 +256,7 @@ export class TaskController {
       const operation: BulkTaskOperation = req.body;
 
       // Verify the move belongs to the authenticated user
-      const move = await req.db('moves')
+      const move = await db('moves')
         .where('id', moveId)
         .where('user_id', req.user!.userId)
         .first();
@@ -307,7 +308,7 @@ export class TaskController {
       const { templateIds } = req.body;
 
       // Verify the move belongs to the authenticated user
-      const move = await req.db('moves')
+      const move = await db('moves')
         .where('id', moveId)
         .where('user_id', req.user!.userId)
         .first();
@@ -341,7 +342,7 @@ export class TaskController {
       const { moveId } = req.params;
 
       // Verify the move belongs to the authenticated user
-      const move = await req.db('moves')
+      const move = await db('moves')
         .where('id', moveId)
         .where('user_id', req.user!.userId)
         .first();

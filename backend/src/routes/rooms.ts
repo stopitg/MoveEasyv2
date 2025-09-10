@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { body, param } from 'express-validator';
 import { RoomController } from '../controllers/roomController';
-import { auth } from '../middleware/auth';
+import { authenticateToken as auth } from '../middleware/auth';
 import { validate } from '../middleware/validation';
 
 const router = Router();
